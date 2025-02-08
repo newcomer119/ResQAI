@@ -1,15 +1,13 @@
-import { useState, useEffect } from 'react';
-import Map, { Marker, Popup } from 'react-map-gl';
-import { AlertTriangle, AlertCircle, Shield, Users, ArrowRight, Phone, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState } from 'react';
+import { AlertCircle, Shield, Users, ArrowRight, Phone, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Disaster } from '../types';
 import { Link } from 'react-router-dom';
-
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
+import DisasterMap from '../components/DisasterMap';
 
 const HERO_SLIDES = [
   {
-    title: "Rapid Response When Every Second Counts",
-    description: "AI-powered disaster response system providing real-time alerts, resource management, and emergency coordination.",
+    title: "AI-Powered Disaster Response",
+    description: "Real-time disaster prediction and response using advanced machine learning algorithms.",
     gradient: "from-blue-600 to-blue-800",
     image: "https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?auto=format&fit=crop&w=2000&q=80"
   },
@@ -45,21 +43,9 @@ const MOCK_DISASTERS: Disaster[] = [
 ];
 
 export default function Dashboard() {
-  const [disasters, setDisasters] = useState<Disaster[]>(MOCK_DISASTERS);
+  const [disasters] = useState<Disaster[]>(MOCK_DISASTERS);
   const [selectedDisaster, setSelectedDisaster] = useState<Disaster | null>(null);
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [viewState, setViewState] = useState({
-    latitude: 34.0522,
-    longitude: -118.2437,
-    zoom: 10
-  });
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % HERO_SLIDES.length);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, []);
 
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % HERO_SLIDES.length);
@@ -147,7 +133,7 @@ export default function Dashboard() {
               </div>
               <div>
                 <p className="text-2xl font-bold">24/7</p>
-                <p className="text-gray-600">Active Monitoring</p>
+                <p className="text-gray-600">AI Monitoring</p>
               </div>
             </div>
           </div>
@@ -168,8 +154,8 @@ export default function Dashboard() {
                 <Phone className="h-6 w-6 text-purple-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold">3 min</p>
-                <p className="text-gray-600">Response Time</p>
+                <p className="text-2xl font-bold">95%</p>
+                <p className="text-gray-600">Prediction Accuracy</p>
               </div>
             </div>
           </div>
@@ -180,8 +166,8 @@ export default function Dashboard() {
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h2 className="text-2xl font-bold mb-2">Live Disaster Monitoring</h2>
-            <p className="text-gray-600">Real-time tracking of active incidents and response coordination</p>
+            <h2 className="text-2xl font-bold mb-2">AI-Powered Disaster Monitoring</h2>
+            <p className="text-gray-600">Real-time prediction and tracking using machine learning</p>
           </div>
           <div className="flex space-x-4">
             <div className="bg-red-100 p-3 rounded-lg">
@@ -211,45 +197,10 @@ export default function Dashboard() {
           </div>
 
           <div className="md:col-span-2">
-            <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100" style={{ height: '400px' }}>
-              <Map
-                {...viewState}
-                onMove={evt => setViewState(evt.viewState)}
-                style={{ width: '100%', height: '100%', borderRadius: '0.75rem' }}
-                mapStyle="mapbox://styles/mapbox/light-v11"
-                mapboxAccessToken={MAPBOX_TOKEN}
-              >
-                {disasters.map(disaster => (
-                  <Marker
-                    key={disaster.id}
-                    latitude={disaster.location.lat}
-                    longitude={disaster.location.lng}
-                    onClick={e => {
-                      e.originalEvent.stopPropagation();
-                      setSelectedDisaster(disaster);
-                    }}
-                  >
-                    <AlertTriangle className="h-6 w-6 text-red-500" />
-                  </Marker>
-                ))}
-
-                {selectedDisaster && (
-                  <Popup
-                    latitude={selectedDisaster.location.lat}
-                    longitude={selectedDisaster.location.lng}
-                    onClose={() => setSelectedDisaster(null)}
-                    closeButton={true}
-                  >
-                    <div className="p-2">
-                      <h3 className="font-semibold">{selectedDisaster.type.charAt(0).toUpperCase() + selectedDisaster.type.slice(1)}</h3>
-                      <p className="text-sm">{selectedDisaster.description}</p>
-                      <p className="text-sm text-gray-600">Severity: {selectedDisaster.severity}/5</p>
-                      <p className="text-sm text-gray-600">Status: {selectedDisaster.status}</p>
-                    </div>
-                  </Popup>
-                )}
-              </Map>
-            </div>
+            <DisasterMap
+              disasters={disasters}
+              onDisasterSelect={setSelectedDisaster}
+            />
           </div>
         </div>
       </div>

@@ -9,7 +9,7 @@ import ReliefCenters from './pages/ReliefCenters';
 import Analytics from './pages/Analytics';
 
 const queryClient = new QueryClient();
-const CLERK_PUBLISHABLE_KEY = "pk_test_cHJlY2lvdXMtY2F0ZmlzaC02Ny5jbGVyay5hY2NvdW50cy5kZXYk";
+const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_KEY;
 
 function App() {
   return (

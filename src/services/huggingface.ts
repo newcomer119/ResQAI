@@ -18,7 +18,7 @@ export const analyzeTweet = async (tweet: string) => {
 export const predictDisasterProbability = async (text: string) => {
   try {
     const result = await hf.textClassification({
-      model: 'saved-by-ai/disaster-tweets-nlp-32',
+      model: 'cardiffnlp/twitter-roberta-base-sentiment',
       inputs: text,
     });
     return {

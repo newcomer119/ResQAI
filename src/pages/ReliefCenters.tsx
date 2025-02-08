@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import Map, { Marker, Popup } from 'react-map-gl';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { MapPin, Package } from 'lucide-react';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import type { ReliefCenter } from '../types';
-
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
 
 const MOCK_RELIEF_CENTERS: ReliefCenter[] = [
   {
@@ -27,13 +27,30 @@ const MOCK_RELIEF_CENTERS: ReliefCenter[] = [
   // Add more mock data as needed
 ];
 
+// Fix Leaflet icon issue
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
+
 export default function ReliefCenters() {
   const [centers] = useState<ReliefCenter[]>(MOCK_RELIEF_CENTERS);
   const [selectedCenter, setSelectedCenter] = useState<ReliefCenter | null>(null);
-  const [viewState, setViewState] = useState({
-    latitude: 34.0522,
-    longitude: -118.2437,
-    zoom: 10
+
+  const customIcon = (status: string) => new L.DivIcon({
+    className: 'custom-icon',
+    html: `<div class="w-6 h-6 ${
+      status === 'operational' ? 'bg-green-500' :
+      status === 'full' ? 'bg-yellow-500' :
+      'bg-red-500'
+    } rounded-full flex items-center justify-center text-white">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-4 h-4">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+      </svg>
+    </div>`
   });
 
   return (
@@ -96,59 +113,48 @@ export default function ReliefCenters() {
 
         <div className="md:col-span-2">
           <div className="bg-white p-4 rounded-lg shadow-sm" style={{ height: '600px' }}>
-            <Map
-              {...viewState}
-              onMove={evt => setViewState(evt.viewState)}
-              style={{ width: '100%', height: '100%' }}
-              mapStyle="mapbox://styles/mapbox/light-v11"
-              mapboxAccessToken={MAPBOX_TOKEN}
+            <MapContainer
+              center={[34.0522, -118.2437]}
+              zoom={10}
+              style={{ height: '100%', width: '100%' }}
             >
+              <TileLayer
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              />
+              
               {centers.map(center => (
                 <Marker
                   key={center.id}
-                  latitude={center.location.lat}
-                  longitude={center.location.lng}
-                  onClick={e => {
-                    e.originalEvent.stopPropagation();
-                    setSelectedCenter(center);
+                  position={[center.location.lat, center.location.lng]}
+                  icon={customIcon(center.status)}
+                  eventHandlers={{
+                    click: () => setSelectedCenter(center)
                   }}
                 >
-                  <MapPin className={`h-6 w-6 ${
-                    center.status === 'operational' ? 'text-green-500' :
-                    center.status === 'full' ? 'text-yellow-500' :
-                    'text-red-500'
-                  }`} />
-                </Marker>
-              ))}
-
-              {selectedCenter && (
-                <Popup
-                  latitude={selectedCenter.location.lat}
-                  longitude={selectedCenter.location.lng}
-                  onClose={() => setSelectedCenter(null)}
-                  closeButton={true}
-                >
-                  <div className="p-2">
-                    <h3 className="font-semibold">{selectedCenter.name}</h3>
-                    <p className="text-sm">{selectedCenter.location.address}</p>
-                    <div className="mt-2">
-                      <p className="text-sm">Occupancy: {selectedCenter.currentOccupancy}/{selectedCenter.capacity}</p>
-                      <div className="mt-1">
-                        <p className="text-sm font-medium">Supply Levels:</p>
-                        <div className="grid grid-cols-4 gap-1 mt-1">
-                          {Object.entries(selectedCenter.supplies).map(([key, value]) => (
-                            <div key={key} className="text-center">
-                              <p className="text-xs capitalize">{key}</p>
-                              <p className="text-sm font-medium">{value}%</p>
-                            </div>
-                          ))}
+                  <Popup>
+                    <div className="p-2">
+                      <h3 className="font-semibold">{center.name}</h3>
+                      <p className="text-sm">{center.location.address}</p>
+                      <div className="mt-2">
+                        <p className="text-sm">Occupancy: {center.currentOccupancy}/{center.capacity}</p>
+                        <div className="mt-1">
+                          <p className="text-sm font-medium">Supply Levels:</p>
+                          <div className="grid grid-cols-4 gap-1 mt-1">
+                            {Object.entries(center.supplies).map(([key, value]) => (
+                              <div key={key} className="text-center">
+                                <p className="text-xs capitalize">{key}</p>
+                                <p className="text-sm font-medium">{value}%</p>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                </Popup>
-              )}
-            </Map>
+                  </Popup>
+                </Marker>
+              ))}
+            </MapContainer>
           </div>
         </div>
       </div>

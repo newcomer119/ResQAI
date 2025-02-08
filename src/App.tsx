@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { ClerkProvider } from '@clerk/clerk-react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import EmergencyForm from './pages/EmergencyForm';
 import ReliefCenters from './pages/ReliefCenters';
 import Analytics from './pages/Analytics';
+import EmergencyContactsMarquee from './components/EmergencyContactsMarquee';
 
 const queryClient = new QueryClient();
 const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_KEY;
@@ -26,6 +27,7 @@ function App() {
                 <Route path="/analytics" element={<Analytics />} />
               </Routes>
             </main>
+            <EmergencyContactsMarquee />
             <Toaster position="top-right" />
           </div>
         </Router>

@@ -1,22 +1,47 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useUser } from '@clerk/clerk-react';
 import { AlertOctagon } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { collection, addDoc } from 'firebase/firestore';
+import { db } from '../firebaseConfig';
+import { useNavigate } from 'react-router-dom';
 
 export default function EmergencyForm() {
-  const { user } = useUser();
+  const { user, isSignedIn } = useUser();
   const [formData, setFormData] = useState({
     type: '',
     description: '',
     location: '',
     priority: 'medium'
   });
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isSignedIn) {
+      alert('You must be signed in to report an emergency.');
+      navigate('/');
+    }
+  }, [isSignedIn, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // In a real application, this would send the data to your backend
-    toast.success('Emergency request submitted successfully');
+    if (!isSignedIn) {
+      toast.error('You must be signed in to submit an emergency request.');
+      return;
+    }
+    try {
+      await addDoc(collection(db, 'emergencies'), {
+        ...formData,
+        userId: user?.id,
+        createdAt: new Date().toISOString()
+      });
+
+      toast.success('Emergency request submitted successfully');
+      setFormData({ type: '', description: '', location: '', priority: 'medium' });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      toast.error('Error submitting emergency request: ' + errorMessage);
+    }
   };
 
   return (
